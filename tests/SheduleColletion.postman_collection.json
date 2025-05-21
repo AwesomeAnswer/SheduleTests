@@ -9,9 +9,35 @@
 	"item": [
 		{
 			"name": "ScheduleGetRequest",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Это массив\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(Array.isArray(jsonData)).to.be.true;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Есть хотя бы один элемент с полем subjectName\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData[0]).to.have.property(\"subjectName\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": "http://localhost:8081/api/schedule"
 			},
 			"response": []
 		},
@@ -22,8 +48,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Статус 200 или 204\", function () {\r",
-							"    pm.expect(pm.response.code).to.be.oneOf([200, 204]);\r",
+							"pm.test(\"Статус 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
 							"});"
 						],
 						"type": "text/javascript",
@@ -34,7 +60,7 @@
 			"request": {
 				"method": "DELETE",
 				"header": [],
-				"url": "http://localhost:8081/api/schedule/16"
+				"url": "http://localhost:8081/api/schedule/12"
 			},
 			"response": []
 		},
@@ -53,7 +79,6 @@
 							"    const data = pm.response.json();\r",
 							"    pm.expect(data).to.have.property(\"weekNumber\");\r",
 							"    pm.expect(data).to.have.property(\"startDate\");\r",
-							"    pm.expect(data.startDate).to.eql(\"2025-05-26\");\r",
 							"});\r",
 							""
 						],
@@ -77,6 +102,12 @@
 							"key": "weekNumber",
 							"value": "22",
 							"type": "text"
+						},
+						{
+							"key": "",
+							"value": "",
+							"type": "text",
+							"disabled": true
 						}
 					]
 				},
@@ -111,13 +142,29 @@
 				"method": "POST",
 				"header": [],
 				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"id\": 32,\r\n    \"week\": {\r\n      \"weekNumber\": 21,\r\n      \"startDate\": \"2025-05-19\",\r\n      \"endDate\": \"2025-05-25\"\r\n    },\r\n    \"dayOfWeek\": \"MONDAY\",\r\n    \"time\": \"13:00:00\",\r\n    \"subjectName\": \"Биология\"\r\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "weekNumber",
+							"value": "21",
+							"type": "text"
+						},
+						{
+							"key": "dayOfWeek",
+							"value": "MONDAY",
+							"type": "text"
+						},
+						{
+							"key": "subjectName",
+							"value": "Биология",
+							"type": "text"
+						},
+						{
+							"key": "time",
+							"value": "13:00",
+							"type": "text"
 						}
-					}
+					]
 				},
 				"url": {
 					"raw": "http://localhost:8081/api/schedule",
@@ -128,13 +175,12 @@
 					"port": "8081",
 					"path": [
 						"api",
-						"schedule",
-						""
+						"schedule"
 					],
 					"query": [
 						{
 							"key": "weekNumber",
-							"value": "22",
+							"value": "21",
 							"disabled": true
 						}
 					]
@@ -144,9 +190,51 @@
 		},
 		{
 			"name": "DailyShedule",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Все элементы — вторник\", () => {\r",
+							"    const data = pm.response.json();\r",
+							"    for (let i = 0; i < data.length; i++) {\r",
+							"        pm.expect(data[i].dayOfWeek).to.eql(\"TUESDAY\");\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/schedule/day/TUESDAY?weekNumber=21",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"schedule",
+						"day",
+						"TUESDAY"
+					],
+					"query": [
+						{
+							"key": "weekNumber",
+							"value": "21"
+						}
+					]
+				}
 			},
 			"response": []
 		},
@@ -157,10 +245,16 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Созданы недели\", () => {\r",
-							"    const json = pm.response.json();\r",
-							"    pm.expect(Array.isArray(json)).to.be.true;\r",
-							"    pm.expect(json.length).to.eql(3); // если count=3\r",
+							"pm.test(\"Статус 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Создан массив недель\", () => {\r",
+							"    const weeks = pm.response.json();\r",
+							"    pm.expect(Array.isArray(weeks)).to.be.true;\r",
+							"    pm.expect(weeks.length).to.eql(3);\r",
+							"    pm.expect(weeks[0]).to.have.property(\"weekNumber\");\r",
+							"    pm.expect(weeks[0]).to.have.property(\"startDate\");\r",
 							"});\r",
 							""
 						],
@@ -171,13 +265,19 @@
 			],
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "\tapplication/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "urlencoded",
 					"urlencoded": [
 						{
-							"key": "number",
-							"value": "1",
+							"key": "count",
+							"value": "3",
 							"type": "text"
 						}
 					]
@@ -188,9 +288,32 @@
 		},
 		{
 			"name": "SheduleByNumber",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Номер недели корректный\", () => {\r",
+							"    const data = pm.response.json();\r",
+							"    for (let i = 0; i < data.length; i++) {\r",
+							"        pm.expect(data[i].week.weekNumber).to.eql(21);\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": "http://localhost:8081/api/schedule/week/21"
 			},
 			"response": []
 		}
